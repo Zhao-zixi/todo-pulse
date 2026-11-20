@@ -76,3 +76,15 @@ test('AI endpoint builds a draft without saving; invalid AI output falls back',a
     assert.ok(fallback.warning);
   }finally{await app.close();await new Promise(resolve=>upstream.close(resolve));}
 });
+test('due events reach injected desktop notifier without any browser poll',async()=>{
+  let now=Date.parse('2026-11-20T08:00:00Z'),closed=false;
+  const received=[];
+  const app=await start({dbPath:':memory:',clock:()=>now,windowsNotifier:{notify:e=>received.push(...e),close:()=>{closed=true;}}});
+  try{
+    assert.equal((await app.request('/api/status'))[1].windowsNotificationsEnabled,true);
+    await app.request('/api/tasks','POST',{title:'弹窗',intervalMinutes:1});
+    now+=60_000;app.tick();app.tick();
+    assert.equal(received.length,1);assert.equal(received[0].title,'弹窗');
+  }finally{await app.close();}
+  assert.equal(closed,true);
+});

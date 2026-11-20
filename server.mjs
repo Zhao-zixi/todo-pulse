@@ -1,3 +1,4 @@
+import { createWindowsNotifier } from './windows-notify.mjs';
 import { DatabaseSync } from "node:sqlite";
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
@@ -84,7 +85,7 @@ async function body(req) {
     return result;
   } catch { throw fail(400,'无效的 JSON 对象。'); }
 }
-export function createApp({dbPath=process.env.TODO_DB_PATH || 'todo.sqlite',clock=Date.now, aiKey=process.env.AI_API_KEY || process.env.OPENAI_API_KEY,model=process.env.AI_MODEL || process.env.OPENAI_MODEL,pushEnabled=process.env.TODO_WEB_PUSH==='1',baseURL=process.env.AI_BASE_URL || process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1'}={}) {
+export function createApp({dbPath=process.env.TODO_DB_PATH || 'todo.sqlite',clock=Date.now, aiKey=process.env.AI_API_KEY || process.env.OPENAI_API_KEY,model=process.env.AI_MODEL || process.env.OPENAI_MODEL,pushEnabled=process.env.TODO_WEB_PUSH==='1',windowsNotifier=createWindowsNotifier(),baseURL=process.env.AI_BASE_URL || process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1'}={}) {
   const aiEnabled=!!(aiKey && model);
   const db = new DatabaseSync(dbPath);
   db.exec(`PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;
@@ -127,6 +128,9 @@ export function createApp({dbPath=process.env.TODO_DB_PATH || 'todo.sqlite',cloc
       db.prepare('DELETE FROM reminders WHERE due_recorded < ?').run(now-24*60*minute);
       db.exec('COMMIT');
     } catch(error) { db.exec('ROLLBACK'); throw error; }
+    if(notifications.length && windowsNotifier){
+      try{windowsNotifier.notify(notifications);}catch(error){console.warn('Windows popup failed:', error.message);}
+    }
     notify(notifications);
   }
   const get = id => mapTask(db.prepare('SELECT * FROM tasks WHERE id=?').get(id));
@@ -154,7 +158,7 @@ export function createApp({dbPath=process.env.TODO_DB_PATH || 'todo.sqlite',cloc
       }
       if(req.headers['sec-fetch-site']==='cross-site') throw fail(403,'禁止跨站 API 请求。');
       const now=clock();
-      if(req.method==='GET'&&path==='/api/status') return json(res,200,{aiEnabled,pushEnabled:!!vapid,publicKey:vapid?.publicKey??null});
+      if(req.method==='GET'&&path==='/api/status') return json(res,200,{aiEnabled,pushEnabled:!!vapid,windowsNotificationsEnabled:!!windowsNotifier,publicKey:vapid?.publicKey??null});
       if(['POST','DELETE'].includes(req.method)&&path==='/api/push'){
         if(!vapid) throw fail(503,'系统推送未启用。');
         const sub=pushSubscription((await body(req)).subscription);
@@ -224,7 +228,7 @@ export function createApp({dbPath=process.env.TODO_DB_PATH || 'todo.sqlite',cloc
   });
   const timer=setInterval(()=>{try{tick();}catch(error){console.error('Reminder scan failed:',error.message);}},1000);
   timer.unref();
-  server.once('close',()=>{closing=true;clearInterval(timer);db.close();});
+  server.once('close',()=>{closing=true;clearInterval(timer);windowsNotifier?.close();db.close();});
   return {server,tick};
 }
 if(process.argv[1] && fileURLToPath(import.meta.url)===resolve(process.argv[1])){
