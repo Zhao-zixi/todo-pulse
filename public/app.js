@@ -6,6 +6,8 @@ let editing = null;
 let registration;
 let pushActive = false;
 let settings = {};
+const nativeOnHere = () => settings.windowsNotificationsEnabled === true &&
+  ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
 let refreshing = false;
 let hydrated = false;
 let previousTasks;
@@ -89,7 +91,7 @@ async function renderEvents(events) {
   for (const e of [...sorted].reverse()) {
     if (seen.has(e.id)) continue;
     seen.add(e.id);
-    if (!hydrated || pushActive || !('Notification' in window) || Notification.permission !== 'granted') continue;
+    if (!hydrated || nativeOnHere() || pushActive || !('Notification' in window) || Notification.permission !== 'granted') continue;
     if (registration) await registration.showNotification('待办提醒', {body:e.title, tag:String(e.id)});
     else new Notification('待办提醒', {body:e.title, tag:String(e.id)});
   }
@@ -140,9 +142,12 @@ editor.onsubmit = async event => {
 };
 $('cancel').onclick = () => fill();
 function connection() {
-  $('notifications').textContent = pushActive ? '关闭后台推送' : '开启通知';
+  $('notifications').hidden = nativeOnHere() && !pushActive;
+  $('notifications').textContent = pushActive ? '关闭网页推送' : '开启通知';
   const ai = settings.aiEnabled ? 'AI 已接入' : 'AI 未配置';
-  $('connection').textContent = ai + ' · ' + (pushActive ? '后台推送已开启' : '后台推送未开启，建议保持页面打开');
+  const notifications = nativeOnHere() ? 'Windows 桌面弹窗已开启，关网页也能提醒'
+    : pushActive ? '后台推送已开启' : '后台推送未开启，建议保持页面打开';
+  $('connection').textContent = ai + ' · ' + notifications;
 }
 function keyBytes(value) {
   const padded = value.replace(/-/g,'+').replace(/_/g,'/') + '='.repeat((4-value.length%4)%4);
@@ -161,7 +166,7 @@ $('notifications').onclick = async () => {
       localStorage.removeItem('todo-pulse-push');
       pushActive = false;
       connection();
-      return message('已关闭后台推送，打开页面时仍可收到提醒。');
+      return message(nativeOnHere() ? '已关闭网页推送，Windows 桌面弹窗仍开启。' : '已关闭后台推送，打开页面时仍可收到提醒。');
     }
     if (await Notification.requestPermission() !== 'granted') throw new Error('未取得通知权限，请在浏览器站点设置中开启。');
     if ('serviceWorker' in navigator) {
