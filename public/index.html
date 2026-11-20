@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#142d27"><link rel="manifest" href="/app.webmanifest"><link rel="apple-touch-icon" href="/icon-192.png"><title>Todo Pulse · 待办节拍</title><link rel="stylesheet" href="/style.css"><script defer src="/app.js"></script></head>
+<body><main>
+<nav class="top" aria-label="应用"><a class="brand" href="/" aria-label="待办节拍首页"><svg width="33" height="33" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="currentColor"/><path d="M6 17h5l3-7 4 12 3-5h5" fill="none" stroke="#f6f3ea" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>待办节拍<small>TODO PULSE</small></span></a><button id="notifications" type="button" class="quiet">开启通知</button></nav>
+<header class="hero">
+<div class="hero-copy"><p class="kicker">把心里那件事放下来</p><h1>记下就好，<br>到点再想。</h1><p>说一句要做什么，核对草稿，剩下交给提醒。</p><a class="hero-action" href="#prompt">写一条待办 <span aria-hidden="true">↘</span></a></div>
+<svg class="orbit" viewBox="0 0 560 340" fill="none" aria-hidden="true"><g stroke="#C7E9AE" stroke-opacity=".28"><circle cx="343" cy="179" r="157"/><circle cx="343" cy="179" r="115"/><circle cx="343" cy="179" r="72"/><path d="M135 179h416M343 0v340" stroke-dasharray="2 8"/></g><g stroke="#E2F3B3" stroke-width="1.5"><path d="M122 180h112l25-29 20 52 26-70 26 88 18-41h205"/><circle cx="343" cy="64" r="5" fill="#E2F3B3"/><circle cx="500" cy="179" r="6" fill="#E2F3B3"/><circle cx="232" cy="292" r="4" fill="#E2F3B3"/></g></svg>
+</header>
+<p id="connection" class="runtime" role="status"></p>
+<p id="feedback" role="status"></p>
+<div class="workspace">
+<section class="composer" id="compose"><h2>新建待办</h2><form id="generate"><label for="prompt">告诉助手你想做什么</label><textarea id="prompt" maxlength="1000" required placeholder="比如：明晚八点提醒我倒垃圾，每隔十分钟提醒一次"></textarea><button class="primary">生成草稿 <span aria-hidden="true">↗</span></button></form>
+<form id="editor"><label>待办标题<input id="title" required maxlength="150" placeholder="也可以直接在这里填写"></label><label>备注<textarea id="notes" maxlength="1000" rows="2" placeholder="要记住的细节"></textarea></label><div class="fields"><label>首次提醒（本地时间）<input id="time" type="datetime-local"></label><label>重复间隔（分钟，可选）<input id="interval" type="number" min="1" max="10080" placeholder="留空则只提醒一次"><small>只填写间隔时，第一次提醒在该间隔后。</small></label></div><div class="actions"><button class="primary" id="save">保存待办</button><button type="button" id="cancel" hidden>取消编辑</button></div></form></section>
+<div class="activity"><section><div class="section-title"><h2>我的待办</h2><span id="count"></span></div><ul id="tasks"></ul></section><section><h2>最近提醒</h2><ul id="events"></ul></section></div>
+</div>
+<footer><span>待办节拍</span><a href="#compose">返回新建待办 ↑</a></footer></main></body></html>
