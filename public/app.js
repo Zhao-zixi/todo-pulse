@@ -64,8 +64,8 @@ function renderTasks(tasks) {
     const li = element('li', '', task.done ? 'done' : '');
     li.append(element('strong', task.title));
     if (task.notes) li.append(element('p', task.notes));
-    const time = task.nextAt ? '下次提醒：' + showDate(task.nextAt) : '未安排提醒';
-    li.append(element('p', time + (task.intervalMinutes ? ' · 每 ' + task.intervalMinutes + ' 分钟' : ''), 'muted'));
+    const time = task.done ? '提醒已停止' : task.nextAt ? '下次提醒：' + showDate(task.nextAt) : '未安排提醒';
+    li.append(element('p', time + (!task.done && task.intervalMinutes ? ' · 每 ' + task.intervalMinutes + ' 分钟' : ''), 'muted'));
     const actions = element('div', '', 'actions');
     const path = 'tasks/' + encodeURIComponent(task.id);
     actions.append(action(task.done ? '重新打开' : '完成', async () => {
