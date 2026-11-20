@@ -17,8 +17,9 @@ async function start(options){
 test('Chinese draft (UTC+8) and input/host protections',async()=>{
   const app=await start({dbPath:':memory:',clock:()=>Date.parse('2026-11-20T10:00:00Z'),aiKey:''});
   try{
-    let [code,{draft}]=await app.request('/api/draft','POST',{text:'明晚八点提醒我写周报，每隔十分钟提醒',offsetMinutes:480});
-    assert.equal(code,200); assert.equal(draft.nextAt,'2026-11-21T12:00:00.000Z'); assert.equal(draft.intervalMinutes,10);
+    let [code,{draft}]=await app.request('/api/draft','POST',{text:'明晚八点提醒我写周报，每隔十分钟提醒一次',offsetMinutes:480});
+    assert.equal(code,200); assert.equal(draft.nextAt,'2026-11-21T12:00:00.000Z'); assert.equal(draft.intervalMinutes,10); assert.equal(draft.title,'写周报');
+    assert.equal((await app.request('/api/draft','POST',{text:'每隔2分钟提醒我检查一次'}))[1].draft.title,'检查一次');
     assert.equal((await app.request('/api/tasks','POST',{title:'x',intervalMinutes:-1}))[0],400);
     assert.equal((await app.request('/api/tasks','GET',undefined,{'Sec-Fetch-Site':'cross-site'}))[0],403);
   }finally{await app.close();}

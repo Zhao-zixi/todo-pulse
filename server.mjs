@@ -46,7 +46,7 @@ function parseDraft(text, now, offset) {
     });
   const local = new Date(now + offset * minute);
   let nextAt = null;
-  const repeat = /(?:每隔|每)\s*(\d+)\s*(分钟|小时)/u.exec(text);
+  const repeat = /(?:每隔|每)\s*(\d+)\s*(分钟|小时)(?:\s*提醒(?!我)(?:\s*(?:一次|1\s*次))?)?/u.exec(text);
   const delay = /(\d+)\s*(分钟|小时)后/u.exec(text);
   const clock = /(今天|明天|后天)?\s*(?:(凌晨|早上|上午|中午|下午|晚上)\s*)?(\d{1,2})(?:[:：](\d{2})|点(?:(半)|(\d{1,2})分?)?)/u.exec(text);
   if (delay && Number(delay[1]) <= 10080) nextAt = new Date(now + Number(delay[1]) * (delay[2] === '小时' ? 60 : 1) * minute).toISOString();
